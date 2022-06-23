@@ -143,3 +143,51 @@ receive msg
    "note":"past"
 }
 ```
+
+
+```
+{
+   "secret":"usn",
+   "filter":{
+      "status":"SUCCESS",
+      "account_id":"usn",
+      "event":{
+         "standard":"nep141",
+         "event":"ft_mint"
+      }
+   },
+   "fetch_past_events":1
+}
+
+
+17:22:38 : 
+
+{
+   "secret":"usn",
+   "events":[
+      {
+         "block_height":"68160372",
+         "block_hash":"G62ipjcNFfDgQonZDjqFPiZYriQ3yZ6AeKgSjEsuvqyU",
+         "block_timestamp":"1655767538326331510",
+         "block_epoch_id":"GX8x79Y9L7mowMATZcrTqcDH759o2DH3ANGpaMTBtoqf",
+         "receipt_id":"6fGRWGa8trq6uWhUnzaAqsx9E97pm3PPkcXo6Vzeyqkg",
+         "log_index":0,
+         "predecessor_id":"usn",
+         "account_id":"usn",
+         "status":"SUCCESS",
+         "event":{
+            "standard":"nep141",
+            "version":"1.0.0",
+            "event":"ft_mint",
+            "data":[
+               {
+                  "owner_id":"usn-unofficial.poolowner.near",
+                  "amount":"157635719211845688753"
+               }
+            ]
+         }
+      }
+   ],
+   "note":"past"
+}
+```
