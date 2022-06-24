@@ -2,11 +2,13 @@ import React from "react";
 import TimeAgo from "timeago-react";
 import logo from "./logo.svg";
 import "./App.css";
+import Big from "big.js";
 
 import { useEffect, useState } from "react";
 
 import { SocketEvent } from "./schema/socket_event";
 import { UsnEvent } from "./schema/usn_event";
+import SocialAccount from "./components/social_account/SocialAccount";
 
 let globalIndex = 0;
 
@@ -55,7 +57,7 @@ function listenToUsn(processEvents: (socketEvents: SocketEvent[]) => void) {
       JSON.stringify({
         secret: "usn",
         filter: usnMintAndBurnFilter,
-        fetch_past_events: 10,
+        fetch_past_events: 50,
       })
     );
   };
@@ -77,6 +79,8 @@ function processEvent(event: SocketEvent): UsnEvent {
     time: new Date(parseFloat(event.block_timestamp) / 1e6),
     event: event.event.event,
     index: globalIndex++,
+    owner_id: event.event.data[0].owner_id,
+    amount: event.event.data[0].amount,
   };
 }
 
@@ -120,23 +124,25 @@ function App() {
                   </td>
                   <td className="col-3">
                     <SocialAccount
-                      accountId={action.accountId}
+                      accountId={usnEvent.owner_id}
                       clickable
-                      filterLink={setFilterAccountId}
+                      // filterLink={setFilterAccountId}
                     />
                   </td>
-                  <td className="col-3">{showAction(action)}</td>
+                  <td className="col-3">{usnEvent.event}</td>
                   <td className="col-1 text-end">
-                    <TokenBalance
+                    {/* <TokenBalance
                       clickable
                       tokenAccountId={tokenAccountId}
                       adjustForBurrow
                       balance={Big(action.data?.amount || 0)}
-                    />
+                    /> */}
+                    {Big(usnEvent.amount).div(Big(10).pow(18)).toFixed(3)} USN
                   </td>
-                  <td className="col-3">
-                    <TokenBadge tokenAccountId={tokenAccountId} />
-                  </td>
+                  {/* TODO: add spend / receive how much near */}
+                  {/* TODO: add exchange rate, like 1 near = 3.x usn */}
+                  {/* TODO: add explore link */}
+                  {/* TODO: add whale alert symbol if amount > x */}
                 </tr>
               );
             })}
