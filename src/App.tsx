@@ -74,14 +74,19 @@ function listenToUsn(processEvents: (socketEvents: SocketEvent[]) => void) {
   };
 }
 
-function processEvent(event: SocketEvent): UsnEvent {
-  return {
-    time: new Date(parseFloat(event.block_timestamp) / 1e6),
-    event: event.event.event,
-    index: globalIndex++,
-    owner_id: event.event.data[0].owner_id,
-    amount: event.event.data[0].amount,
-  };
+// to support batch mint / burn, we process every event data
+function processEvent(event: SocketEvent): UsnEvent[] {
+  const usnEvents: UsnEvent[] = [];
+  event.event.data.forEach((singleEventData) => {
+    usnEvents.push({
+      time: new Date(parseFloat(event.block_timestamp) / 1e6),
+      event: event.event.event,
+      index: globalIndex++,
+      owner_id: singleEventData.owner_id,
+      amount: singleEventData.amount,
+    });
+  });
+  return usnEvents;
 }
 
 function App() {
