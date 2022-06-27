@@ -23,7 +23,7 @@ This app is deployed using AWS amplify which will be triggered whenever `main` b
 # Acknowledge
 This project is inspired by [burrow-live-feed](https://github.com/NearDeFi/burrow-live-feed) and [nft-live-feed](https://github.com/evgenykuzyakov/nft-mints), which tracks burrow (a lending protocol on NEAR) events and NFT minting events using the same websocket.
 
-The above 2 projects are written in javascript, so I decided to write mine in typescript with tsx for fun.
+The above 2 projects are written in javascript, so I decided to write mine in typescript with tsx for fun, I also defined some schema for event to make it easier with typescript.
 
 # How it works 
 The websocket is implemented in [events-api](https://github.com/evgenykuzyakov/event-api)
