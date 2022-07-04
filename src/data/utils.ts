@@ -46,3 +46,30 @@ export function accountTrim(accountId: string) {
 
 //   return o;
 // };
+
+export const bigToString = (b: Big) => {
+  let s = b.toFixed();
+  let pos = s.indexOf(".");
+  let p = 6;
+  let len = 7;
+  if (pos > 0) {
+    let ap = Math.min(p, Math.max(len - pos, 0));
+    if (ap > 0) {
+      ap += 1;
+    }
+    if (pos + ap < s.length) {
+      s = s.substring(0, pos + ap);
+    }
+  } else {
+    pos = s.length;
+  }
+  for (let i = pos - 4; i >= 0; i -= 3) {
+    s = s.slice(0, i + 1) + "," + s.slice(i + 1);
+  }
+
+  if (s === "0.000000" && p === 6 && len === 7) {
+    return "<0.000001";
+  }
+
+  return s;
+};

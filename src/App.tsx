@@ -1,11 +1,10 @@
-import React from "react";
 import TimeAgo from "timeago-react";
-import logo from "./logo.svg";
-import "./App.css";
+import "./App.scss";
 import Big from "big.js";
 
 import { useEffect, useState } from "react";
 
+import { bigToString } from "./data/utils";
 import { SocketEvent } from "./schema/socket_event";
 import { UsnEvent } from "./schema/usn_event";
 import SocialAccount from "./components/social_account/SocialAccount";
@@ -80,7 +79,7 @@ function processEvent(event: SocketEvent): UsnEvent[] {
   event.event.data.forEach((singleEventData) => {
     usnEvents.push({
       time: new Date(parseFloat(event.block_timestamp) / 1e6),
-      event: event.event.event,
+      event: event.event.event.substring(3), // remove the ft_ to only display mint / burn
       index: globalIndex++,
       owner_id: singleEventData.owner_id,
       amount: singleEventData.amount,
@@ -117,32 +116,22 @@ function App() {
   return (
     <div className="container">
       <h1>Live USN feed</h1>
+
       <div className="table-responsive">
         <table className="table align-middle">
           <tbody>
             {usnEvents.map((usnEvent) => {
-              // const tokenAccountId = action.data?.tokenId || DefaultTokenId;
               return (
                 <tr key={usnEvent.index}>
                   <td className="col-1">
                     <TimeAgo datetime={usnEvent.time} />
                   </td>
                   <td className="col-3">
-                    <SocialAccount
-                      accountId={usnEvent.owner_id}
-                      clickable
-                      // filterLink={setFilterAccountId}
-                    />
+                    <SocialAccount accountId={usnEvent.owner_id} clickable />
                   </td>
                   <td className="col-3">{usnEvent.event}</td>
                   <td className="col-1 text-end">
-                    {/* <TokenBalance
-                      clickable
-                      tokenAccountId={tokenAccountId}
-                      adjustForBurrow
-                      balance={Big(action.data?.amount || 0)}
-                    /> */}
-                    {Big(usnEvent.amount).div(Big(10).pow(18)).toFixed(3)} USN
+                    {bigToString(Big(usnEvent.amount).div(Big(10).pow(18)))} USN
                   </td>
                   {/* TODO: add spend / receive how much near */}
                   {/* TODO: add exchange rate, like 1 near = 3.x usn */}
