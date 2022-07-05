@@ -116,7 +116,7 @@ function App() {
   return (
     <div className="container">
       <h1>Live USN feed</h1>
-
+      {/* add filter by amount, like only display event greater than x USD */}
       <div className="table-responsive">
         <table className="table align-middle">
           <tbody>
