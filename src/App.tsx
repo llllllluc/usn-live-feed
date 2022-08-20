@@ -8,31 +8,49 @@ import { bigToString } from "./data/utils";
 import { SocketEvent } from "./schema/socket_event";
 import { UsnEvent } from "./schema/usn_event";
 import SocialAccount from "./components/social_account/SocialAccount";
+import { Filter } from "./schema/filter";
 
 let globalIndex = 0;
+let reconnectTimeout: NodeJS.Timeout | null = null;
+const socketUrl = "wss://events.near.stream/ws"
+// const makeFilterByAccountId = (filterAccountId) => {
+//   let filter = [
+//     makeFilter(null, filterLiquidations),
+//     makeFilter(null, filterLiquidations),
+//   ];
+//   filter[0].event.data = [{ account_id: filterAccountId }];
+//   filter[1].event.data = [{ liquidation_account_id: filterAccountId }];
+//   return filter;
+// }
 
-const usnMintAndBurnFilter = [
-  {
+const getFtMintFilter = (accountId = "usn"): Filter => {
+  return {
     status: "SUCCESS",
-    account_id: "usn",
+    account_id: accountId,
     event: {
       standard: "nep141",
       event: "ft_mint",
-    },
-  },
-  {
+    }
+  }
+}
+
+const getFtBurnFilter = (accountId = "usn"): Filter => {
+  return {
     status: "SUCCESS",
-    account_id: "usn",
+    account_id: accountId,
     event: {
       standard: "nep141",
       event: "ft_burn",
-    },
-  },
-];
+    }
+  }
+}
 
-let reconnectTimeout: NodeJS.Timeout | null = null;
+const addUserIdToFilter = (filter: Filter, userId: string) => {
+  filter.event.data = [{owner_id: userId}]
+  return filter
+}
 
-function listenToUsn(processEvents: (socketEvents: SocketEvent[]) => void) {
+const listenToUsn = (processEvents: (socketEvents: SocketEvent[]) => void) => {
   const scheduleReconnect = (timeOut: number) => {
     if (reconnectTimeout) {
       clearTimeout(reconnectTimeout);
@@ -48,14 +66,14 @@ function listenToUsn(processEvents: (socketEvents: SocketEvent[]) => void) {
     return;
   }
 
-  const ws = new WebSocket("wss://events.near.stream/ws");
+  const ws = new WebSocket(socketUrl);
 
   ws.onopen = () => {
     console.log(`Connection to WS has been established`);
     ws.send(
       JSON.stringify({
         secret: "usn",
-        filter: usnMintAndBurnFilter,
+        filter: [getFtMintFilter(), getFtBurnFilter()],
         fetch_past_events: 50,
       })
     );
@@ -74,7 +92,7 @@ function listenToUsn(processEvents: (socketEvents: SocketEvent[]) => void) {
 }
 
 // to support batch mint / burn, we process every event data
-function processEvent(event: SocketEvent): UsnEvent[] {
+const processEvent = (event: SocketEvent): UsnEvent[] => {
   const usnEvents: UsnEvent[] = [];
   event.event.data.forEach((singleEventData) => {
     usnEvents.push({
@@ -88,10 +106,10 @@ function processEvent(event: SocketEvent): UsnEvent[] {
   return usnEvents;
 }
 
-function App() {
+const App = () => {
   const [usnEvents, setUsnEvents] = useState<UsnEvent[]>([]);
+  const [filterUserAccountId, setFilterUserAccountId] = useState<string>("");
 
-  // Setting up NFTs
   useEffect(() => {
     const processEvents = (socketEvents: SocketEvent[]) => {
       // console.log(events);
@@ -113,10 +131,57 @@ function App() {
     listenToUsn(processEvents);
   }, []);
 
+  // check if any filter needs to be applied, only activate after filterAccountId change
+  useEffect(() => {
+    if (filterUserAccountId === "") {
+      return;
+    }
+    const ftMintFilter = getFtMintFilter()
+    const ftBurnFilter = getFtBurnFilter()
+    const ftMintFilterByUserId = addUserIdToFilter(ftMintFilter, filterUserAccountId)
+    const ftBurnFilterByUserId = addUserIdToFilter(ftBurnFilter, filterUserAccountId)
+
+
+    burrowFilter = makeFilter(filterAccountId, filterLiquidations);
+    if (filterTypingTimeout) {
+      clearTimeout(filterTypingTimeout);
+      filterTypingTimeout = null;
+    }
+    const accountId = filterAccountId;
+    filterTypingTimeout = setTimeout(() => {
+      if (!accountId) {
+        window.location.href = "/#";
+      } else {
+        window.location.href = `/#account=${accountId}`;
+      }
+      if (ws) {
+        setBurrowActions([]);
+        ws.close();
+      }
+    }, 500);
+  }, [filterAccountId]);
+
   return (
     <div className="container">
-      <h1>Live USN feed</h1>
+      <h1>USN Live feed</h1>
       {/* add filter by amount, like only display event greater than x USD */}
+      <div className="row justify-content-md-center">
+        <div className="col-auto">
+          <label className="col-form-label" htmlFor="accountIdFilter">
+            Filter by account ID:
+          </label>
+        </div>
+        <div className="col">
+          <input
+            className="form-control"
+            type="text"
+            id="accountIdFilter"
+            placeholder="Account ID"
+            value={filterUserAccountId || ""}
+            onChange={(e) => setFilterUserAccountId(e.target.value)}
+          />
+        </div>
+      </div>
       <div className="table-responsive">
         <table className="table align-middle">
           <tbody>

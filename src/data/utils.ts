@@ -9,7 +9,7 @@ export const OneNear = Big(10).pow(24);
 export const OneEth = Big(10).pow(18);
 const AccountSafetyMargin = OneNear.div(2);
 
-export function accountTrim(accountId: string) {
+export const accountTrim = (accountId: string) => {
   return accountId && accountId.length > 14 + 14 + 1
     ? accountId.slice(0, 14) + "…" + accountId.slice(-14)
     : accountId;
