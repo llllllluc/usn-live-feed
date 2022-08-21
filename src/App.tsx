@@ -16,6 +16,7 @@ import {
 } from "./utils/filter";
 
 let globalIndex = 0;
+let numberOfEvents = 10;
 let reconnectTimeout: NodeJS.Timeout | null = null;
 let filterTypingTimeout: NodeJS.Timeout | null = null;
 let usnFilters = [getFtMintFilter(), getFtBurnFilter()];
@@ -47,12 +48,14 @@ const listenToUsn = (processEvents: (socketEvents: SocketEvent[]) => void) => {
 
   ws.onopen = () => {
     console.log(`Connection to WS has been established`);
+    console.log(usnFilters);
+    console.log(numberOfEvents);
     // @ts-ignore
     ws.send(
       JSON.stringify({
         secret: "usn",
         filter: usnFilters,
-        fetch_past_events: 50,
+        fetch_past_events: numberOfEvents,
       })
     );
   };
@@ -91,6 +94,7 @@ const App = () => {
     "ft_mint",
     "ft_burn",
   ]);
+  const [numEvent, setNumEvent] = useState(10);
 
   useEffect(() => {
     const processEvents = (socketEvents: SocketEvent[]) => {
@@ -117,6 +121,7 @@ const App = () => {
     // if (filterUserAccountId === "" && filterEvents) {
     //   return;
     // }
+    numberOfEvents = numEvent;
     usnFilters = [];
     filterEvents.map((filterEvent) => {
       const filter = getNoEventFilter();
@@ -138,7 +143,7 @@ const App = () => {
         ws.close();
       }
     }, 1000);
-  }, [filterUserAccountId, filterEvents]);
+  }, [filterUserAccountId, filterEvents, numEvent]);
 
   const defaultOptions = [
     { value: "ft_mint", label: "Mint" },
@@ -161,6 +166,24 @@ const App = () => {
   return (
     <div className="container">
       <h1>USN Live feed</h1>
+      <div className="row justify-content-md-center">
+        <div className="col-auto">
+          <label className="col-form-label" htmlFor="numEvent">
+            Number of events:
+          </label>
+        </div>
+        <div className="col">
+          <input
+            className="form-control"
+            type="number"
+            id="numEvent"
+            value={numEvent}
+            min="1"
+            max="100"
+            onChange={(e) => setNumEvent(Number(e.target.value))}
+          />
+        </div>
+      </div>
       <div className="row justify-content-md-center">
         <div className="col-auto">
           <label className="col-form-label" htmlFor="eventTypeFilter">
