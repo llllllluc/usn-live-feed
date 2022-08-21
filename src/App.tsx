@@ -2,9 +2,7 @@ import TimeAgo from "timeago-react";
 import "./App.scss";
 import Big from "big.js";
 import Select, { MultiValue } from "react-select";
-
 import { useEffect, useState } from "react";
-
 import { bigToString } from "./data/utils";
 import { SocketEvent } from "./schema/socket_event";
 import { UsnEvent } from "./schema/usn_event";
@@ -22,17 +20,7 @@ let reconnectTimeout: NodeJS.Timeout | null = null;
 let filterTypingTimeout: NodeJS.Timeout | null = null;
 let usnFilters = [getFtMintFilter(), getFtBurnFilter()];
 let ws: WebSocket | null = null;
-
 const socketUrl = "wss://events.near.stream/ws";
-// const makeFilterByAccountId = (filterAccountId) => {
-//   let filter = [
-//     makeFilter(null, filterLiquidations),
-//     makeFilter(null, filterLiquidations),
-//   ];
-//   filter[0].event.data = [{ account_id: filterAccountId }];
-//   filter[1].event.data = [{ liquidation_account_id: filterAccountId }];
-//   return filter;
-// }
 
 const listenToUsn = (processEvents: (socketEvents: SocketEvent[]) => void) => {
   const scheduleReconnect = (timeOut: number) => {
@@ -59,10 +47,6 @@ const listenToUsn = (processEvents: (socketEvents: SocketEvent[]) => void) => {
 
   ws.onopen = () => {
     console.log(`Connection to WS has been established`);
-    // if (!ws) {
-    // console.log(`This should not happen, ws should not be null when onopen`);
-    //   return
-    // }
     // @ts-ignore
     ws.send(
       JSON.stringify({
@@ -103,9 +87,6 @@ const processEvent = (event: SocketEvent): UsnEvent[] => {
 const App = () => {
   const [usnEvents, setUsnEvents] = useState<UsnEvent[]>([]);
   const [filterUserAccountId, setFilterUserAccountId] = useState("");
-  // const [filterAmountGreaterThan, setFilterAmountGreaterThan] = useState("");
-  // const [filterMint, setFilterMint] = useState(true);
-  // const [filterBurn, setFilterBurn] = useState(true);
   const [filterEvents, setFilterEvents] = useState<string[]>([
     "ft_mint",
     "ft_burn",
@@ -113,7 +94,6 @@ const App = () => {
 
   useEffect(() => {
     const processEvents = (socketEvents: SocketEvent[]) => {
-      // console.log(events);
       const usnEvents = socketEvents.flatMap(processEvent);
       usnEvents.reverse();
       setUsnEvents((prevState) => {
@@ -148,7 +128,6 @@ const App = () => {
         addUserIdToFilter(filter, filterUserAccountId)
       );
     }
-    console.log(usnFilters);
     if (filterTypingTimeout) {
       clearTimeout(filterTypingTimeout);
       filterTypingTimeout = null;
@@ -176,46 +155,29 @@ const App = () => {
     options: MultiValue<{ value: string; label: string }>
   ) => {
     const events = options.flatMap((option) => option.value);
-    console.log(events);
     setFilterEvents(events);
   };
 
   return (
     <div className="container">
       <h1>USN Live feed</h1>
-      Select event type (mint, burn or transfer)
-      <Select
-        options={allOptions}
-        defaultValue={defaultOptions}
-        onChange={handleSelect}
-        isMulti
-      />
-      {/* <div className="form-check">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          id="liquidationsFilter"
-          // value={filterMint || true}
-          checked={filterMint}
-          onChange={(e) => setFilterMint(e.currentTarget.checked)}
-        />
-        <label className="form-check-label" htmlFor="liquidationsFilter">
-          Display mint event
-        </label>
+      <div className="row justify-content-md-center">
+        <div className="col-auto">
+          <label className="col-form-label" htmlFor="eventTypeFilter">
+            Select event type:
+          </label>
+        </div>
+        <div className="col">
+          <Select
+            className="react-select"
+            id="eventTypeFilter"
+            options={allOptions}
+            defaultValue={defaultOptions}
+            onChange={handleSelect}
+            isMulti
+          />
+        </div>
       </div>
-      <div className="form-check">
-        <input
-          className="form-check-input"
-          type="checkbox"
-          id="liquidationsFilter"
-          // value={filterBurn || ""}
-          checked={filterBurn}
-          onChange={(e) => setFilterBurn(e.currentTarget.checked)}
-        />
-        <label className="form-check-label" htmlFor="liquidationsFilter">
-          Display burn event
-        </label>
-      </div> */}
       <div className="row justify-content-md-center">
         <div className="col-auto">
           <label className="col-form-label" htmlFor="accountIdFilter">
@@ -269,7 +231,6 @@ const App = () => {
                   </td>
                   {/* TODO: add spend / receive how much near */}
                   {/* TODO: add exchange rate, like 1 near = 3.x usn */}
-                  {/* TODO: add explore link */}
                   {/* TODO: add whale alert symbol if amount > x */}
                 </tr>
               );
