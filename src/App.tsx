@@ -8,10 +8,14 @@ import { bigToString } from "./data/utils";
 import { SocketEvent } from "./schema/socket_event";
 import { UsnEvent } from "./schema/usn_event";
 import SocialAccount from "./components/social_account/SocialAccount";
-import { Filter } from "./schema/filter";
+import { addUserIdToFilter, getFtBurnFilter, getFtMintFilter } from "./utils/filter";
 
 let globalIndex = 0;
 let reconnectTimeout: NodeJS.Timeout | null = null;
+let filterTypingTimeout: NodeJS.Timeout | null = null;
+let usnFilters = [getFtMintFilter(), getFtBurnFilter()];
+let ws: WebSocket | null = null;
+
 const socketUrl = "wss://events.near.stream/ws"
 // const makeFilterByAccountId = (filterAccountId) => {
 //   let filter = [
@@ -22,33 +26,6 @@ const socketUrl = "wss://events.near.stream/ws"
 //   filter[1].event.data = [{ liquidation_account_id: filterAccountId }];
 //   return filter;
 // }
-
-const getFtMintFilter = (accountId = "usn"): Filter => {
-  return {
-    status: "SUCCESS",
-    account_id: accountId,
-    event: {
-      standard: "nep141",
-      event: "ft_mint",
-    }
-  }
-}
-
-const getFtBurnFilter = (accountId = "usn"): Filter => {
-  return {
-    status: "SUCCESS",
-    account_id: accountId,
-    event: {
-      standard: "nep141",
-      event: "ft_burn",
-    }
-  }
-}
-
-const addUserIdToFilter = (filter: Filter, userId: string) => {
-  filter.event.data = [{owner_id: userId}]
-  return filter
-}
 
 const listenToUsn = (processEvents: (socketEvents: SocketEvent[]) => void) => {
   const scheduleReconnect = (timeOut: number) => {
@@ -66,14 +43,26 @@ const listenToUsn = (processEvents: (socketEvents: SocketEvent[]) => void) => {
     return;
   }
 
-  const ws = new WebSocket(socketUrl);
+  // if (ws) {
+  //   ws.close();
+  //   return;
+  // }
+
+  console.log('before creating new socket')
+
+  ws = new WebSocket(socketUrl);
 
   ws.onopen = () => {
     console.log(`Connection to WS has been established`);
+    // if (!ws) {
+    // console.log(`This should not happen, ws should not be null when onopen`);
+    //   return
+    // }
+    // @ts-ignore
     ws.send(
       JSON.stringify({
         secret: "usn",
-        filter: [getFtMintFilter(), getFtBurnFilter()],
+        filter: usnFilters,
         fetch_past_events: 50,
       })
     );
@@ -140,26 +129,24 @@ const App = () => {
     const ftBurnFilter = getFtBurnFilter()
     const ftMintFilterByUserId = addUserIdToFilter(ftMintFilter, filterUserAccountId)
     const ftBurnFilterByUserId = addUserIdToFilter(ftBurnFilter, filterUserAccountId)
-
-
-    burrowFilter = makeFilter(filterAccountId, filterLiquidations);
+    usnFilters = [ftMintFilterByUserId, ftBurnFilterByUserId]
     if (filterTypingTimeout) {
       clearTimeout(filterTypingTimeout);
       filterTypingTimeout = null;
     }
-    const accountId = filterAccountId;
+    // const accountId = filterAccountId;
     filterTypingTimeout = setTimeout(() => {
-      if (!accountId) {
-        window.location.href = "/#";
-      } else {
-        window.location.href = `/#account=${accountId}`;
-      }
+      // if (!accountId) {
+      //   window.location.href = "/#";
+      // } else {
+      //   window.location.href = `/#account=${accountId}`;
+      // }
       if (ws) {
-        setBurrowActions([]);
+        setUsnEvents([]);
         ws.close();
       }
-    }, 500);
-  }, [filterAccountId]);
+    }, 1000);
+  }, [filterUserAccountId]);
 
   return (
     <div className="container">
@@ -168,7 +155,7 @@ const App = () => {
       <div className="row justify-content-md-center">
         <div className="col-auto">
           <label className="col-form-label" htmlFor="accountIdFilter">
-            Filter by account ID:
+            Filter by user account ID:
           </label>
         </div>
         <div className="col">
