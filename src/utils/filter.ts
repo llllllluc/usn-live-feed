@@ -1,4 +1,4 @@
-import { Filter } from "../schema/filter"
+import { Filter } from "../schema/filter";
 
 export const getFtMintFilter = (accountId = "usn"): Filter => {
   return {
@@ -7,9 +7,9 @@ export const getFtMintFilter = (accountId = "usn"): Filter => {
     event: {
       standard: "nep141",
       event: "ft_mint",
-    }
-  }
-}
+    },
+  };
+};
 
 export const getFtBurnFilter = (accountId = "usn"): Filter => {
   return {
@@ -18,12 +18,11 @@ export const getFtBurnFilter = (accountId = "usn"): Filter => {
     event: {
       standard: "nep141",
       event: "ft_burn",
-    }
-  }
-}
-
+    },
+  };
+};
 
 export const addUserIdToFilter = (filter: Filter, userId: string) => {
-  filter.event.data = [{ owner_id: userId }]
-  return filter
-}
+  filter.event.data = [{ owner_id: userId }];
+  return filter;
+};

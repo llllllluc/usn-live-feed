@@ -13,7 +13,7 @@ export const accountTrim = (accountId: string) => {
   return accountId && accountId.length > 14 + 14 + 1
     ? accountId.slice(0, 14) + "…" + accountId.slice(-14)
     : accountId;
-}
+};
 
 // const toCamel = (s) => {
 //   return s.replace(/([-_][a-z])/gi, ($1) => {

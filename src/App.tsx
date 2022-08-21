@@ -8,7 +8,11 @@ import { bigToString } from "./data/utils";
 import { SocketEvent } from "./schema/socket_event";
 import { UsnEvent } from "./schema/usn_event";
 import SocialAccount from "./components/social_account/SocialAccount";
-import { addUserIdToFilter, getFtBurnFilter, getFtMintFilter } from "./utils/filter";
+import {
+  addUserIdToFilter,
+  getFtBurnFilter,
+  getFtMintFilter,
+} from "./utils/filter";
 
 let globalIndex = 0;
 let reconnectTimeout: NodeJS.Timeout | null = null;
@@ -16,7 +20,7 @@ let filterTypingTimeout: NodeJS.Timeout | null = null;
 let usnFilters = [getFtMintFilter(), getFtBurnFilter()];
 let ws: WebSocket | null = null;
 
-const socketUrl = "wss://events.near.stream/ws"
+const socketUrl = "wss://events.near.stream/ws";
 // const makeFilterByAccountId = (filterAccountId) => {
 //   let filter = [
 //     makeFilter(null, filterLiquidations),
@@ -48,7 +52,7 @@ const listenToUsn = (processEvents: (socketEvents: SocketEvent[]) => void) => {
   //   return;
   // }
 
-  console.log('before creating new socket')
+  console.log("before creating new socket");
 
   ws = new WebSocket(socketUrl);
 
@@ -78,7 +82,7 @@ const listenToUsn = (processEvents: (socketEvents: SocketEvent[]) => void) => {
   ws.onerror = (err) => {
     console.log("WebSocket error", err);
   };
-}
+};
 
 // to support batch mint / burn, we process every event data
 const processEvent = (event: SocketEvent): UsnEvent[] => {
@@ -93,11 +97,12 @@ const processEvent = (event: SocketEvent): UsnEvent[] => {
     });
   });
   return usnEvents;
-}
+};
 
 const App = () => {
   const [usnEvents, setUsnEvents] = useState<UsnEvent[]>([]);
-  const [filterUserAccountId, setFilterUserAccountId] = useState<string>("");
+  const [filterUserAccountId, setFilterUserAccountId] = useState("");
+  const [filterAmountGreaterThan, setFilterAmountGreaterThan] = useState("");
 
   useEffect(() => {
     const processEvents = (socketEvents: SocketEvent[]) => {
@@ -122,14 +127,16 @@ const App = () => {
 
   // check if any filter needs to be applied, only activate after filterAccountId change
   useEffect(() => {
-    if (filterUserAccountId === "") {
+    if (filterUserAccountId === "" && filterAmountGreaterThan === "") {
       return;
     }
-    const ftMintFilter = getFtMintFilter()
-    const ftBurnFilter = getFtBurnFilter()
-    const ftMintFilterByUserId = addUserIdToFilter(ftMintFilter, filterUserAccountId)
-    const ftBurnFilterByUserId = addUserIdToFilter(ftBurnFilter, filterUserAccountId)
-    usnFilters = [ftMintFilterByUserId, ftBurnFilterByUserId]
+    let ftMintFilter = getFtMintFilter();
+    let ftBurnFilter = getFtBurnFilter();
+    if (filterUserAccountId !== "") {
+      ftMintFilter = addUserIdToFilter(ftMintFilter, filterUserAccountId);
+      ftBurnFilter = addUserIdToFilter(ftBurnFilter, filterUserAccountId);
+    }
+    usnFilters = [ftMintFilter, ftBurnFilter];
     if (filterTypingTimeout) {
       clearTimeout(filterTypingTimeout);
       filterTypingTimeout = null;
@@ -146,7 +153,7 @@ const App = () => {
         ws.close();
       }
     }, 1000);
-  }, [filterUserAccountId]);
+  }, [filterUserAccountId, filterAmountGreaterThan]);
 
   return (
     <div className="container">
@@ -166,6 +173,23 @@ const App = () => {
             placeholder="Account ID"
             value={filterUserAccountId || ""}
             onChange={(e) => setFilterUserAccountId(e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="row justify-content-md-center">
+        <div className="col-auto">
+          <label className="col-form-label" htmlFor="amountFilter">
+            Filter by token amount greater than :
+          </label>
+        </div>
+        <div className="col">
+          <input
+            className="form-control"
+            type="text"
+            id="accountIdFilter"
+            placeholder="Amount"
+            value={filterAmountGreaterThan || ""}
+            onChange={(e) => setFilterAmountGreaterThan(e.target.value)}
           />
         </div>
       </div>
@@ -197,6 +221,6 @@ const App = () => {
       </div>
     </div>
   );
-}
+};
 
 export default App;

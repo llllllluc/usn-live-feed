@@ -11,7 +11,10 @@ h1 {
 a {
   color: #333;
 
-  &:hover, &:active, &:focus, &:disabled {
+  &:hover,
+  &:active,
+  &:focus,
+  &:disabled {
     color: #666;
   }
 }

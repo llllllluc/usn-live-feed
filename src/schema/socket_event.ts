@@ -1,5 +1,5 @@
 export interface SocketEvent {
-  block_height: string,
+  block_height: string;
   block_hash: string;
   block_timestamp: string;
   block_epoch_id: string;
