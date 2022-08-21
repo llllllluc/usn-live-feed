@@ -169,7 +169,7 @@ const App = () => {
       <div className="row justify-content-md-center">
         <div className="col-auto">
           <label className="col-form-label" htmlFor="numEvent">
-            Number of events:
+            Number of events (up to 100):
           </label>
         </div>
         <div className="col">
