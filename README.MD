@@ -4,7 +4,9 @@ A live feed for USN token event on NEAR blockchain, supports filter by mint / bu
 Available at https://www.near-live-feed-usn.com/
 
 # Introduction
-This is a pure frontend project built using react and typescript. It listens to an existing websocket which has indexed NEAR protocol data, it will display all the mint and burn events on USN token (a stablecoin issued natively on NEAR, probably the largest stablecoin in NEAR ecosystem) in real time. By looking at this live feed we can get some insight on USN activity in NEAR economy.
+USN is a major stablecoin native on NEAR.
+
+This is a pure frontend project built using react and typescript. It listens to an existing websocket which has indexed NEAR protocol data and fetch USN related events.
 
 This project is for me to learn more on frontend development and how to work with blockchain related stuff.
 
@@ -23,7 +25,7 @@ This app is deployed using AWS amplify which will be triggered whenever `main` b
 # Acknowledge
 This project is inspired by [burrow-live-feed](https://github.com/NearDeFi/burrow-live-feed) and [nft-live-feed](https://github.com/evgenykuzyakov/nft-mints), which tracks burrow (a lending protocol on NEAR) events and NFT minting events using the same websocket.
 
-The above 2 projects are written in javascript, so I decided to write mine in typescript with tsx for fun, I also defined some schema for event to make it easier with typescript.
+The above 2 projects are written in javascript, so I decided to write mine in typescript with tsx for fun, I also defined some schema for event and filter to make it easier with typescript.
 
 # How it works 
 The websocket is implemented in [events-api](https://github.com/evgenykuzyakov/event-api)
@@ -31,6 +33,9 @@ The websocket is implemented in [events-api](https://github.com/evgenykuzyakov/e
 A simple doc on event format available at https://thewiki.near.page/events-api
 
 # Test Websocket
+You can play with the websocket to see what kind of event are supported.
+Also NEAR document is a good place to find available event. For example the fungible token standard [NEP-141](https://nomicon.io/Standards/Tokens/FungibleToken/Core) defines 3 interfaces, hence 3 events: mint / burn / transfer.
+
 Online websocket testing tool http://livepersoninc.github.io/ws-test-page/
 
 sample event
