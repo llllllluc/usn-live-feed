@@ -1,6 +1,7 @@
 import TimeAgo from "timeago-react";
 import "./App.scss";
 import Big from "big.js";
+import Select, { MultiValue } from "react-select";
 
 import { useEffect, useState } from "react";
 
@@ -9,9 +10,11 @@ import { SocketEvent } from "./schema/socket_event";
 import { UsnEvent } from "./schema/usn_event";
 import SocialAccount from "./components/social_account/SocialAccount";
 import {
+  addEventToFilter,
   addUserIdToFilter,
   getFtBurnFilter,
   getFtMintFilter,
+  getNoEventFilter,
 } from "./utils/filter";
 
 let globalIndex = 0;
@@ -52,8 +55,6 @@ const listenToUsn = (processEvents: (socketEvents: SocketEvent[]) => void) => {
   //   return;
   // }
 
-  console.log("before creating new socket");
-
   ws = new WebSocket(socketUrl);
 
   ws.onopen = () => {
@@ -92,7 +93,7 @@ const processEvent = (event: SocketEvent): UsnEvent[] => {
       time: new Date(parseFloat(event.block_timestamp) / 1e6),
       event: event.event.event.substring(3), // remove the ft_ to only display mint / burn
       index: globalIndex++,
-      owner_id: singleEventData.owner_id,
+      owner_id: singleEventData.owner_id || singleEventData.old_owner_id,
       amount: singleEventData.amount,
     });
   });
@@ -102,7 +103,13 @@ const processEvent = (event: SocketEvent): UsnEvent[] => {
 const App = () => {
   const [usnEvents, setUsnEvents] = useState<UsnEvent[]>([]);
   const [filterUserAccountId, setFilterUserAccountId] = useState("");
-  const [filterAmountGreaterThan, setFilterAmountGreaterThan] = useState("");
+  // const [filterAmountGreaterThan, setFilterAmountGreaterThan] = useState("");
+  // const [filterMint, setFilterMint] = useState(true);
+  // const [filterBurn, setFilterBurn] = useState(true);
+  const [filterEvents, setFilterEvents] = useState<string[]>([
+    "ft_mint",
+    "ft_burn",
+  ]);
 
   useEffect(() => {
     const processEvents = (socketEvents: SocketEvent[]) => {
@@ -127,38 +134,88 @@ const App = () => {
 
   // check if any filter needs to be applied, only activate after filterAccountId change
   useEffect(() => {
-    if (filterUserAccountId === "" && filterAmountGreaterThan === "") {
-      return;
-    }
-    let ftMintFilter = getFtMintFilter();
-    let ftBurnFilter = getFtBurnFilter();
+    // if (filterUserAccountId === "" && filterEvents) {
+    //   return;
+    // }
+    usnFilters = [];
+    filterEvents.map((filterEvent) => {
+      const filter = getNoEventFilter();
+      addEventToFilter(filter, filterEvent);
+      usnFilters.push(filter);
+    });
     if (filterUserAccountId !== "") {
-      ftMintFilter = addUserIdToFilter(ftMintFilter, filterUserAccountId);
-      ftBurnFilter = addUserIdToFilter(ftBurnFilter, filterUserAccountId);
+      usnFilters.map((filter) =>
+        addUserIdToFilter(filter, filterUserAccountId)
+      );
     }
-    usnFilters = [ftMintFilter, ftBurnFilter];
+    console.log(usnFilters);
     if (filterTypingTimeout) {
       clearTimeout(filterTypingTimeout);
       filterTypingTimeout = null;
     }
-    // const accountId = filterAccountId;
     filterTypingTimeout = setTimeout(() => {
-      // if (!accountId) {
-      //   window.location.href = "/#";
-      // } else {
-      //   window.location.href = `/#account=${accountId}`;
-      // }
       if (ws) {
         setUsnEvents([]);
         ws.close();
       }
     }, 1000);
-  }, [filterUserAccountId, filterAmountGreaterThan]);
+  }, [filterUserAccountId, filterEvents]);
+
+  const defaultOptions = [
+    { value: "ft_mint", label: "Mint" },
+    { value: "ft_burn", label: "Burn" },
+  ];
+
+  const allOptions = [
+    { value: "ft_mint", label: "Mint" },
+    { value: "ft_burn", label: "Burn" },
+    { value: "ft_transfer", label: "Transfer" },
+  ];
+
+  const handleSelect = (
+    options: MultiValue<{ value: string; label: string }>
+  ) => {
+    const events = options.flatMap((option) => option.value);
+    console.log(events);
+    setFilterEvents(events);
+  };
 
   return (
     <div className="container">
       <h1>USN Live feed</h1>
-      {/* add filter by amount, like only display event greater than x USD */}
+      Select event type (mint, burn or transfer)
+      <Select
+        options={allOptions}
+        defaultValue={defaultOptions}
+        onChange={handleSelect}
+        isMulti
+      />
+      {/* <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="liquidationsFilter"
+          // value={filterMint || true}
+          checked={filterMint}
+          onChange={(e) => setFilterMint(e.currentTarget.checked)}
+        />
+        <label className="form-check-label" htmlFor="liquidationsFilter">
+          Display mint event
+        </label>
+      </div>
+      <div className="form-check">
+        <input
+          className="form-check-input"
+          type="checkbox"
+          id="liquidationsFilter"
+          // value={filterBurn || ""}
+          checked={filterBurn}
+          onChange={(e) => setFilterBurn(e.currentTarget.checked)}
+        />
+        <label className="form-check-label" htmlFor="liquidationsFilter">
+          Display burn event
+        </label>
+      </div> */}
       <div className="row justify-content-md-center">
         <div className="col-auto">
           <label className="col-form-label" htmlFor="accountIdFilter">
@@ -176,7 +233,8 @@ const App = () => {
           />
         </div>
       </div>
-      <div className="row justify-content-md-center">
+      {/* add filter by amount, like only display event greater than x USD */}
+      {/* <div className="row justify-content-md-center">
         <div className="col-auto">
           <label className="col-form-label" htmlFor="amountFilter">
             Filter by token amount greater than :
@@ -192,7 +250,7 @@ const App = () => {
             onChange={(e) => setFilterAmountGreaterThan(e.target.value)}
           />
         </div>
-      </div>
+      </div> */}
       <div className="table-responsive">
         <table className="table align-middle">
           <tbody>
