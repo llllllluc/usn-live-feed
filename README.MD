@@ -1,5 +1,5 @@
 # USN
-A live feed for USN event on NEAR blockchain.
+A live feed for USN token event on NEAR blockchain, supports filter by mint / burn / transfer event and owner address.
 
 Available at https://www.near-live-feed-usn.com/
 
